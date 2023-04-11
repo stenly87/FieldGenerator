@@ -1,8 +1,13 @@
-﻿// See https://aka.ms/new-console-template for more information
-byte[,] array = new byte[10, 10];
-List<Func<byte[,], int, int, int, bool, bool>> test = new List<Func<byte[,], int, int, int, bool, bool>>();
+﻿
+// игровое поле
+byte[,] field = new byte[10, 10];
+// набор рисователей, они проверяют возможность рисования и рисуют корабли
+List<Func<byte[,], int, int, int, bool, bool>> generators = new List<Func<byte[,], int, int, int, bool, bool>>();
 
-test.Add((ar, x, y, l, e) =>
+Random random = new Random();
+
+//рисователь вправо
+generators.Add((ar, x, y, l, e) => 
 {
     if (x > ar.GetUpperBound(0))
         return false;
@@ -10,10 +15,10 @@ test.Add((ar, x, y, l, e) =>
         return false;
     if (e)
     {
-        Stumb(ar, x-1, y);
+        Stumb(ar, x - 1, y);
 
         ar[x, y] = 1;
-        
+
         Stumb(ar, x - 1, y + 1);
         Stumb(ar, x - 1, y - 1);
 
@@ -28,10 +33,11 @@ test.Add((ar, x, y, l, e) =>
         Stumb(ar, x + 1, y);
         return true;
     }
-    return test[0](ar, ++x, y, --l, e);
+    return generators[0](ar, ++x, y, --l, e);
 });
 
-test.Add((ar, x, y, l, e) =>
+//рисователь влево
+generators.Add((ar, x, y, l, e) =>
 {
     if (x < 0)
         return false;
@@ -58,10 +64,11 @@ test.Add((ar, x, y, l, e) =>
         Stumb(ar, x - 1, y);
         return true;
     }
-    return test[1](ar, --x, y, --l, e);
+    return generators[1](ar, --x, y, --l, e);
 });
 
-test.Add((ar, x, y, l, e) =>
+//рисователь вверх
+generators.Add((ar, x, y, l, e) =>
 {
     if (y < 0)
         return false;
@@ -79,17 +86,18 @@ test.Add((ar, x, y, l, e) =>
 
         Stumb(ar, x - 1, y - 1);
         Stumb(ar, x + 1, y - 1);
-        
+
     }
     if (l == 1)
     {
         Stumb(ar, x, y - 1);
         return true;
     }
-    return test[2](ar, x, --y, --l, e);
+    return generators[2](ar, x, --y, --l, e);
 });
 
-test.Add((ar, x, y, l, e) =>
+//рисователь вниз
+generators.Add((ar, x, y, l, e) =>
 {
     if (y > ar.GetUpperBound(1))
         return false;
@@ -115,27 +123,10 @@ test.Add((ar, x, y, l, e) =>
         Stumb(ar, x, y + 1);
         return true;
     }
-    return test[3](ar, x, ++y, --l, e);
+    return generators[3](ar, x, ++y, --l, e);
 });
 
-Random random = new Random();
-
-Fill(array, 4);
-
-Fill(array, 3);
-Fill(array, 3);
-
-Fill(array, 2);
-Fill(array, 2);
-Fill(array, 2);
-
-Fill(array, 1);
-Fill(array, 1);
-Fill(array, 1);
-Fill(array, 1);
-
-View(array);
-
+// вывод массива
 void View(byte[,] array)
 {
     Console.Clear();
@@ -156,26 +147,48 @@ void View(byte[,] array)
     Console.ForegroundColor = ConsoleColor.White;
 }
 
-
+// рисователь заглушки, куда нельзя ставить корабль, ставится вокруг корабля
 void Stumb(byte[,] ar, int x, int y)
 {
     if (x > ar.GetUpperBound(0) || x < 0 || y < 0 || y > ar.GetUpperBound(1))
         return;
-    if (ar[x,y] != 1)
+    if (ar[x, y] != 1)
         ar[x, y] = 2;
 }
 
+// рисование корабля заданной длины
 void Fill(byte[,] array, int length)
 {
     int x;
     int y;
-    Func<byte[,], int, int, int, bool, bool> action;
+    Func<byte[,], int, int, int, bool, bool> DrawCheck;
     do
     {
         x = random.Next(0, 10);
         y = random.Next(0, 10);
-        action = test[random.Next(0, 4)];
+        DrawCheck = generators[random.Next(0, 4)];
     }
-    while (!action(array, x, y, length, false));
-    action(array, x, y, length, true);
+    while (!DrawCheck(array, x, y, length, false));
+    DrawCheck(array, x, y, length, true);
 }
+
+// 4 палубы
+Fill(field, 4);
+
+// 3 палубы
+Fill(field, 3);
+Fill(field, 3);
+
+// 2 палубы
+Fill(field, 2);
+Fill(field, 2);
+Fill(field, 2);
+
+// 1 палуба
+Fill(field, 1);
+Fill(field, 1);
+Fill(field, 1);
+Fill(field, 1);
+
+// результат
+View(field);
